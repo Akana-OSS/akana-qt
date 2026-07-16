@@ -10,7 +10,9 @@ from typing import Literal
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QFrame, QHBoxLayout, QLabel, QVBoxLayout, QWidget
 
+from akana.icons import glyph
 from akana.tokens import SPACE
+from akana.util import set_dyn
 
 Variant = Literal["default", "strong", "solid"]
 
@@ -26,15 +28,16 @@ class AkAlert(QFrame):
     ) -> None:
         super().__init__(parent)
         self.setObjectName("AkAlert")
+        self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
 
         root = QHBoxLayout(self)
         root.setContentsMargins(SPACE[5], SPACE[4], SPACE[5], SPACE[4])
         root.setSpacing(SPACE[3])
 
-        self._icon = QLabel("!")
+        self._icon = QLabel(glyph("alert"))
         self._icon.setObjectName("akAlertIcon")
         self._icon.setFixedWidth(16)
-        self._icon.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self._icon.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignHCenter)
         root.addWidget(self._icon, 0)
 
         col = QVBoxLayout()
@@ -57,12 +60,7 @@ class AkAlert(QFrame):
         self.set_variant(variant)
 
     def set_variant(self, variant: Variant) -> None:
-        self.setProperty("variant", variant)
-        style = self.style()
-        if style is not None:
-            style.unpolish(self)
-            style.polish(self)
-        self.update()
+        set_dyn(self, "variant", variant)
 
     def set_title(self, title: str) -> None:
         self._title.setText(title)

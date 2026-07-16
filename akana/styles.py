@@ -1,8 +1,7 @@
 """Akana Qt — theme-aware QSS generation.
 
-Styles target widget class names + dynamic properties so a single
-`apply(window)` refresh re-themes the whole tree. Matches web
-`assets/components.css` (Akana v0.5 monochrome).
+Matches web `assets/components.css` (Akana v0.5) within QSS limits.
+Focus rings use a fixed 2px border width so geometry never jumps.
 """
 
 from __future__ import annotations
@@ -39,11 +38,13 @@ def build() -> str:
     inv_text = t["inverse_text"]
     inv_bg = t["inverse_bg"]
 
+    # Shared focus: always 2px so padding stays stable
+    focus_btn = f"border: 2px solid {ink};"
+    # Control rest border 1px; focus 2px with 1px less padding to avoid jump
+    # Better: always 2px, rest color = border_strong or transparent
+
     return f"""
-/* ---- Base ----
-   Intermediate QWidgets stay transparent so toolbars/panels don't show
-   nested "boxes" (opaque child edges on a different surface).
-*/
+/* ========== Base ========== */
 QWidget {{
     background-color: transparent;
     color: {text};
@@ -65,11 +66,12 @@ QLabel {{
     background: transparent;
     color: {text};
 }}
+
+/* Type roles */
 QLabel#akTitle {{
     font-size: {fs["3xl"]}px;
     font-weight: 700;
     letter-spacing: {ty.tracking_tight};
-    line-height: {ty.lh_tight};
     color: {ink};
 }}
 QLabel#akSectionTitle {{
@@ -79,14 +81,16 @@ QLabel#akSectionTitle {{
     color: {ink};
 }}
 QLabel#akBrand {{
-    font-size: {fs["lg"]}px;
-    font-weight: 600;
+    font-size: {fs["xl"]}px;
+    font-weight: 700;
+    letter-spacing: {ty.tracking_tight};
     color: {ink};
 }}
 QLabel#akBrandSub {{
     font-family: {ty.family_mono};
     font-size: {fs["2xs"]}px;
     letter-spacing: {ty.tracking_label};
+    text-transform: uppercase;
     color: {text_mut};
 }}
 QLabel#akLabel {{
@@ -112,7 +116,6 @@ QLabel#akMuted {{
 QLabel#akLead {{
     color: {text_sec};
     font-size: {fs["lg"]}px;
-    max-width: 60ch;
 }}
 QLabel#akPanelTitle {{
     font-size: {fs["sm"]}px;
@@ -123,43 +126,48 @@ QLabel#akHelper {{
     font-size: {fs["xs"]}px;
     color: {text_mut};
 }}
+QLabel#akHelperError {{
+    font-size: {fs["xs"]}px;
+    color: {text};
+}}
+QLabel#akMonoMeta {{
+    font-family: {ty.family_mono};
+    font-size: {fs["xs"]}px;
+    color: {text_mut};
+}}
+
+/* Shell */
 QFrame#akSidebar {{
     background-color: {surface};
     border: none;
     border-right: {bw}px solid {border};
 }}
-QFrame#akNavRail {{
-    background-color: transparent;
-    border: none;
-}}
+QFrame#akNavRail {{ background: transparent; border: none; }}
 QFrame#akDivider {{
     background-color: {border};
     border: none;
     max-height: 1px;
     min-height: 1px;
 }}
-QScrollArea {{
-    background-color: {bg};
+QScrollArea {{ background-color: {bg}; border: none; }}
+QScrollArea > QWidget {{ background-color: {bg}; }}
+QAbstractScrollArea::viewport {{ background-color: {bg}; }}
+QFrame#akContentChrome {{ background-color: {bg}; border: none; }}
+QFrame#akContentInner {{ background: transparent; border: none; }}
+QFrame#akPageHero {{
+    background: transparent;
     border: none;
+    border-bottom: {bw}px solid {border};
 }}
-QScrollArea > QWidget {{
-    background-color: {bg};
-}}
-QAbstractScrollArea::viewport {{
-    background-color: {bg};
-}}
+QStackedWidget {{ background-color: {bg}; border: none; }}
 
-/* ---- Title bar (frameless chrome) ---- */
+/* Title bar */
 AkTitleBar, QFrame#AkTitleBar {{
     background-color: {surface};
     border: none;
     border-bottom: {bw}px solid {border};
 }}
-QLabel#akTitleMark {{
-    color: {ink};
-    font-size: {fs["sm"]}px;
-    padding-right: 2px;
-}}
+QLabel#akTitleMark {{ color: {ink}; font-size: {fs["sm"]}px; }}
 QLabel#akTitleBarLabel {{
     font-size: {fs["sm"]}px;
     font-weight: 500;
@@ -189,15 +197,9 @@ QPushButton#akTitleBtn[role="close"]:hover {{
     color: {inv_text};
 }}
 
-/* ---- Showcase / panels ---- */
-AkShowcaseSection, QFrame#AkShowcaseSection {{
-    background-color: transparent;
-    border: none;
-}}
-AkStyleBoard, QFrame#AkStyleBoard {{
-    background-color: transparent;
-    border: none;
-}}
+/* Showcase */
+AkShowcaseSection, QFrame#AkShowcaseSection {{ background: transparent; border: none; }}
+AkStyleBoard, QFrame#AkStyleBoard {{ background: transparent; border: none; }}
 QFrame#AkStyleCell {{
     background-color: {bg};
     border: {bw}px solid {border};
@@ -208,15 +210,12 @@ AkPanel, QFrame#AkPanel {{
     border: {bw}px solid {border};
     border-radius: {r.lg}px;
 }}
-/* Toolbar strip: no double-chrome; children sit on one surface */
 QFrame#akToolbar {{
     background-color: {surface};
     border: {bw}px solid {border};
     border-radius: {r.lg}px;
 }}
-QFrame#akToolbar QWidget {{
-    background-color: transparent;
-}}
+QFrame#akToolbar QWidget {{ background-color: transparent; }}
 AkPanel[tone="surface"], QFrame#AkPanel[tone="surface"] {{
     background-color: {surface};
     border-color: {border};
@@ -226,26 +225,15 @@ AkPanel[tone="ink"], QFrame#AkPanel[tone="ink"] {{
     border-color: {ink};
 }}
 AkPanel[tone="ink"] QLabel,
-QFrame#AkPanel[tone="ink"] QLabel {{
-    color: {inv_text};
-}}
+QFrame#AkPanel[tone="ink"] QLabel {{ color: {inv_text}; }}
 AkPanel[tone="ink"] QLabel#akLabel,
-QFrame#AkPanel[tone="ink"] QLabel#akLabel {{
-    color: {border_s};
-}}
+QFrame#AkPanel[tone="ink"] QLabel#akLabel {{ color: {border_s}; }}
 AkPanel[tone="ink"] QLabel#akPanelTitle,
-QFrame#AkPanel[tone="ink"] QLabel#akPanelTitle {{
-    color: {inv_text};
-}}
+QFrame#AkPanel[tone="ink"] QLabel#akPanelTitle {{ color: {inv_text}; }}
 AkPanel[tone="ink"] QLabel#akMuted,
-QFrame#AkPanel[tone="ink"] QLabel#akMuted {{
-    color: {border_s};
-}}
-/* Ghost on ink: lighten hover */
+QFrame#AkPanel[tone="ink"] QLabel#akMuted {{ color: {border_s}; }}
 AkPanel[tone="ink"] AkButton[variant="ghost"],
-QFrame#AkPanel[tone="ink"] AkButton[variant="ghost"] {{
-    color: {inv_text};
-}}
+QFrame#AkPanel[tone="ink"] AkButton[variant="ghost"] {{ color: {inv_text}; }}
 AkPanel[tone="ink"] AkButton[variant="ghost"]:hover,
 QFrame#AkPanel[tone="ink"] AkButton[variant="ghost"]:hover {{
     background-color: {border};
@@ -255,60 +243,92 @@ AkPanel[tone="dashed"], QFrame#AkPanel[tone="dashed"] {{
     background-color: {surface};
     border: {bw}px dashed {border_s};
 }}
-QFrame#akPageHero {{
-    background: transparent;
-    border: none;
-    border-bottom: {bw}px solid {border};
-    padding-bottom: 4px;
+
+/* Token swatch */
+QFrame#akSwatch {{
+    border: {bw}px solid {border};
+    border-radius: {r.md}px;
+    min-height: 56px;
 }}
-QFrame#akContentChrome {{
-    background-color: {bg};
-    border: none;
+QLabel#akSwatchHex {{
+    font-family: {ty.family_mono};
+    font-size: {fs["2xs"]}px;
+    color: {text_mut};
 }}
-QFrame#akContentInner {{
-    background: transparent;
-    border: none;
-    max-width: {tokens.MAX_W}px;
+QLabel#akSwatchName {{
+    font-family: {ty.family_mono};
+    font-size: {fs["2xs"]}px;
+    letter-spacing: {ty.tracking_label};
+    text-transform: uppercase;
+    color: {text_sec};
 }}
 
-/* ---- Button (web .ak-btn) ---- */
+/* Link card (gallery index) */
+AkLinkCard, QFrame#AkLinkCard {{
+    background-color: {bg};
+    border: {bw}px solid {border};
+    border-radius: {r.lg}px;
+}}
+AkLinkCard[hovered="true"], QFrame#AkLinkCard[hovered="true"] {{
+    border-color: {border_s};
+}}
+AkLinkCard:focus, QFrame#AkLinkCard:focus {{
+    border: 2px solid {ink};
+}}
+QLabel#akLinkName {{
+    font-size: {fs["lg"]}px;
+    font-weight: 500;
+    letter-spacing: {ty.tracking_tight};
+    color: {ink};
+    background: transparent;
+}}
+QLabel#akLinkDesc {{
+    font-size: {fs["sm"]}px;
+    color: {text_sec};
+    background: transparent;
+}}
+QLabel#akLinkGo {{
+    color: {text_mut};
+    font-size: {fs["lg"]}px;
+    background: transparent;
+    min-width: 20px;
+}}
+AkLinkCard[hovered="true"] QLabel#akLinkGo {{
+    color: {ink};
+}}
+
+/* ========== Button ==========
+   Always 2px border → focus never shifts layout.
+*/
 AkButton {{
     background-color: {ink};
     color: {inv_text};
-    border: {bw}px solid transparent;
+    border: 2px solid transparent;
     border-radius: {r.md}px;
-    padding: 10px 16px;
+    padding: 9px 15px;
     font-family: {ty.family_ui};
     font-size: {fs["sm"]}px;
     font-weight: 500;
     min-height: 20px;
 }}
-AkButton:hover {{
-    background-color: {ink_hover};
-    color: {inv_text};
-}}
-AkButton:pressed {{
-    background-color: {ink_active};
-    color: {inv_text};
-}}
+AkButton:hover {{ background-color: {ink_hover}; color: {inv_text}; }}
+AkButton:pressed {{ background-color: {ink_active}; color: {inv_text}; }}
 AkButton:disabled {{
     background-color: {surface_2};
     color: {text_mut};
-    border: {bw}px solid {border};
+    border: 2px solid {border};
 }}
-AkButton:focus {{
-    border: 2px solid {ink};
-    padding: 9px 15px;
-}}
+AkButton:focus {{ border: 2px solid {ink}; }}
+
 AkButton[variant="secondary"] {{
     background-color: transparent;
     color: {text};
-    border: {bw}px solid {border_s};
+    border: 2px solid {border_s};
 }}
 AkButton[variant="secondary"]:hover {{
     background-color: {surface_2};
     color: {text};
-    border: {bw}px solid {border_s};
+    border: 2px solid {border_s};
 }}
 AkButton[variant="secondary"]:pressed {{
     background-color: {surface};
@@ -317,38 +337,24 @@ AkButton[variant="secondary"]:pressed {{
 AkButton[variant="secondary"]:disabled {{
     background-color: transparent;
     color: {text_mut};
-    border: {bw}px solid {border};
+    border: 2px solid {border};
 }}
-AkButton[variant="secondary"]:focus {{
-    border: 2px solid {ink};
-    padding: 9px 15px;
-}}
+AkButton[variant="secondary"]:focus {{ border: 2px solid {ink}; }}
+
 AkButton[variant="ghost"] {{
     background-color: transparent;
     color: {text};
-    border: {bw}px solid transparent;
+    border: 2px solid transparent;
 }}
-AkButton[variant="ghost"]:hover {{
-    background-color: {surface_2};
-    color: {text};
-}}
-AkButton[variant="ghost"]:pressed {{
-    background-color: {surface};
-    color: {ink};
-}}
-AkButton[variant="ghost"]:disabled {{
-    background-color: transparent;
-    color: {text_mut};
-}}
-AkButton[variant="ghost"]:focus {{
-    border: 2px solid {ink};
-    padding: 9px 15px;
-}}
-/* Inverse: for use on ink / solid surfaces */
+AkButton[variant="ghost"]:hover {{ background-color: {surface_2}; color: {text}; }}
+AkButton[variant="ghost"]:pressed {{ background-color: {surface}; color: {ink}; }}
+AkButton[variant="ghost"]:disabled {{ color: {text_mut}; background: transparent; }}
+AkButton[variant="ghost"]:focus {{ border: 2px solid {ink}; }}
+
 AkButton[variant="inverse"] {{
     background-color: {inv_text};
     color: {inv_bg};
-    border: {bw}px solid transparent;
+    border: 2px solid transparent;
 }}
 AkButton[variant="inverse"]:hover {{
     background-color: {surface};
@@ -362,21 +368,18 @@ AkButton[variant="inverse"]:disabled {{
     background-color: {border_s};
     color: {text_mut};
 }}
-AkButton[akSize="sm"] {{ padding: 7px 12px; font-size: {fs["xs"]}px; }}
-AkButton[akSize="sm"]:focus {{ padding: 6px 11px; }}
-AkButton[akSize="lg"] {{ padding: 13px 22px; font-size: {fs["md"]}px; }}
-AkButton[akSize="lg"]:focus {{ padding: 12px 21px; }}
+AkButton[variant="inverse"]:focus {{ border: 2px solid {inv_text}; }}
 
-/* ---- Nav ----
-   Always reserve 1px border so checked state doesn't change geometry
-   (avoids clipped bottom edge / layout jump).
-*/
+AkButton[akSize="sm"] {{ padding: 6px 11px; font-size: {fs["xs"]}px; }}
+AkButton[akSize="lg"] {{ padding: 12px 21px; font-size: {fs["md"]}px; }}
+
+/* ========== Nav ========== */
 QPushButton#akNavItem {{
     background-color: transparent;
     color: {text_sec};
-    border: {bw}px solid transparent;
+    border: 2px solid transparent;
     border-radius: {r.md}px;
-    padding: 10px 14px;
+    padding: 9px 13px;
     font-family: {ty.family_ui};
     font-size: {fs["sm"]}px;
     font-weight: 500;
@@ -385,33 +388,49 @@ QPushButton#akNavItem {{
 QPushButton#akNavItem:hover {{
     color: {text};
     background-color: {surface_2};
-    border: {bw}px solid transparent;
 }}
 QPushButton#akNavItem:checked {{
     color: {ink};
     background-color: {bg};
-    border: {bw}px solid {border};
+    border: 2px solid {border};
     font-weight: 600;
 }}
-QPushButton#akNavItem:checked:hover {{
-    background-color: {bg};
-    border: {bw}px solid {border};
-    color: {ink};
-}}
-QPushButton#akNavItem:focus {{
-    border: 2px solid {ink};
-    padding: 9px 13px;
-}}
+QPushButton#akNavItem:focus {{ border: 2px solid {ink}; }}
 
-/* ---- Card (web .ak-card) ---- */
+AkNavStrip, QFrame#AkNavStrip {{
+    background-color: {surface};
+    border: {bw}px solid {border};
+    border-radius: {r.lg}px;
+}}
+QPushButton#akNavStripItem {{
+    background-color: transparent;
+    color: {text_sec};
+    border: 2px solid transparent;
+    border-radius: {r.md}px;
+    padding: 8px 13px;
+    font-family: {ty.family_ui};
+    font-size: {fs["sm"]}px;
+    font-weight: 500;
+}}
+QPushButton#akNavStripItem:hover {{
+    color: {text};
+    background-color: {surface_2};
+}}
+QPushButton#akNavStripItem:checked {{
+    color: {ink};
+    background-color: {bg};
+    border: 2px solid transparent;
+    font-weight: 600;
+}}
+QPushButton#akNavStripItem:focus {{ border: 2px solid {ink}; }}
+
+/* ========== Card ========== */
 AkCard {{
     background-color: {bg};
     border: {bw}px solid {border};
     border-radius: {r.lg}px;
 }}
-AkCard:hover {{
-    border-color: {border_s};
-}}
+AkCard:hover {{ border-color: {border_s}; }}
 QLabel#akCardTitle {{
     font-size: {fs["lg"]}px;
     font-weight: 500;
@@ -431,6 +450,7 @@ QLabel#akCardAction {{
     text-transform: uppercase;
     color: {ink};
     background: transparent;
+    margin-top: {s[2]}px;
 }}
 QLabel#akCardIcon {{
     background-color: {bg};
@@ -438,76 +458,70 @@ QLabel#akCardIcon {{
     border-radius: {r.md}px;
     color: {ink};
     font-size: {fs["sm"]}px;
-    min-width: 38px;
-    max-width: 38px;
-    min-height: 38px;
-    max-height: 38px;
 }}
 
-/* ---- Input / Textarea / Select ---- */
+/* ========== Input / Textarea / Select ==========
+   Always 2px border; rest color = border_strong.
+*/
 AkInput, QLineEdit {{
     background-color: {bg};
     color: {text};
-    border: {bw}px solid {border_s};
+    border: 2px solid {border_s};
     border-radius: {r.md}px;
-    padding: 0 14px;
+    padding: 0 13px;
     min-height: {ch}px;
+    max-height: {ch}px;
     font-family: {ty.family_ui};
     font-size: {fs["sm"]}px;
     selection-background-color: {ink};
     selection-color: {inv_text};
 }}
-AkInput:hover, QLineEdit:hover {{
-    border-color: {ink};
-}}
-AkInput:focus, QLineEdit:focus {{
-    border: 2px solid {ink};
-    padding: 0 13px;
-}}
+AkInput:hover, QLineEdit:hover {{ border-color: {ink}; }}
+AkInput:focus, QLineEdit:focus {{ border: 2px solid {ink}; }}
 AkInput:disabled, QLineEdit:disabled {{
     color: {text_mut};
     background-color: {surface_2};
     border-color: {border};
 }}
+AkInput[akError="true"], QLineEdit[akError="true"] {{
+    border: 2px solid {ink};
+}}
+
 AkTextarea, QPlainTextEdit, QTextEdit {{
     background-color: {bg};
     color: {text};
-    border: {bw}px solid {border_s};
+    border: 2px solid {border_s};
     border-radius: {r.md}px;
-    padding: 12px 14px;
+    padding: 11px 13px;
     min-height: 120px;
     font-family: {ty.family_ui};
     font-size: {fs["sm"]}px;
     selection-background-color: {ink};
     selection-color: {inv_text};
 }}
-AkTextarea:hover, QPlainTextEdit:hover, QTextEdit:hover {{
-    border-color: {ink};
-}}
-AkTextarea:focus, QPlainTextEdit:focus, QTextEdit:focus {{
-    border: 2px solid {ink};
-    padding: 11px 13px;
-}}
+AkTextarea:hover, QPlainTextEdit:hover, QTextEdit:hover {{ border-color: {ink}; }}
+AkTextarea:focus, QPlainTextEdit:focus, QTextEdit:focus {{ border: 2px solid {ink}; }}
 AkTextarea:disabled, QPlainTextEdit:disabled, QTextEdit:disabled {{
     color: {text_mut};
     background-color: {surface_2};
     border-color: {border};
 }}
+AkTextarea[akError="true"], QPlainTextEdit[akError="true"] {{
+    border: 2px solid {ink};
+}}
+
 AkSelect, QComboBox {{
     background-color: {bg};
     color: {text};
-    border: {bw}px solid {border_s};
+    border: 2px solid {border_s};
     border-radius: {r.md}px;
-    padding: 0 14px;
+    padding: 0 13px;
     font-family: {ty.family_ui};
     font-size: {fs["sm"]}px;
     min-height: {ch}px;
 }}
 AkSelect:hover, QComboBox:hover {{ border-color: {ink}; }}
-AkSelect:focus, QComboBox:focus {{
-    border: 2px solid {ink};
-    padding: 0 13px;
-}}
+AkSelect:focus, QComboBox:focus {{ border: 2px solid {ink}; }}
 AkSelect:disabled, QComboBox:disabled {{
     color: {text_mut};
     background-color: {surface_2};
@@ -535,13 +549,21 @@ AkSelect QAbstractItemView, QComboBox QAbstractItemView {{
     padding: 4px;
 }}
 
-/* ---- Badge ---- */
-AkBadge {{
+/* Hide native checkbox/radio indicators — custom paintEvent owns them */
+AkCheckbox::indicator, AkRadio::indicator {{
+    width: 0;
+    height: 0;
+    border: none;
+    background: transparent;
+}}
+
+/* ========== Badge ========== */
+AkBadge, QFrame#AkBadge {{
     background-color: {surface};
     border: {bw}px solid {border_s};
     border-radius: {r.pill}px;
 }}
-AkBadge QLabel {{
+AkBadge QLabel, QFrame#AkBadge QLabel {{
     font-family: {ty.family_mono};
     font-size: {fs["2xs"]}px;
     font-weight: 500;
@@ -549,91 +571,15 @@ AkBadge QLabel {{
     color: {text_sec};
     background: transparent;
 }}
-AkBadge[variant="solid"] {{
+AkBadge[variant="solid"], QFrame#AkBadge[variant="solid"] {{
     background-color: {ink};
     border-color: {ink};
 }}
-AkBadge[variant="solid"] QLabel {{ color: {inv_text}; }}
-
-/* ---- Checkbox (square) ---- */
-AkCheckbox {{
-    spacing: {s[3]}px;
-    color: {text};
-    background: transparent;
-    font-size: {fs["sm"]}px;
-}}
-AkCheckbox::indicator {{
-    width: 18px;
-    height: 18px;
-    border-radius: {r.sm}px;
-    border: {bw}px solid {border_s};
-    background-color: {bg};
-}}
-AkCheckbox::indicator:hover {{
-    border-color: {ink};
-}}
-AkCheckbox::indicator:checked {{
-    background-color: {ink};
-    border-color: {ink};
-}}
-AkCheckbox::indicator:disabled {{
-    background-color: {surface};
-    border-color: {border};
+AkBadge[variant="solid"] QLabel, QFrame#AkBadge[variant="solid"] QLabel {{
+    color: {inv_text};
 }}
 
-/* ---- Radio ---- */
-AkRadio, QRadioButton {{
-    spacing: 8px;
-    color: {text};
-    background: transparent;
-    font-size: {fs["sm"]}px;
-}}
-AkRadio::indicator, QRadioButton::indicator {{
-    width: 16px;
-    height: 16px;
-    border-radius: 8px;
-    border: {bw}px solid {border_s};
-    background-color: {bg};
-}}
-AkRadio::indicator:hover, QRadioButton::indicator:hover {{
-    border-color: {ink};
-}}
-AkRadio::indicator:checked, QRadioButton::indicator:checked {{
-    border: 5px solid {ink};
-    background-color: {inv_text};
-}}
-
-/* ---- Toggle switch ---- */
-AkToggle {{
-    spacing: {s[3]}px;
-    color: {text};
-    background: transparent;
-    font-size: {fs["sm"]}px;
-}}
-AkToggle::indicator {{
-    width: 40px;
-    height: 22px;
-    border-radius: 11px;
-    border: {bw}px solid {border_s};
-    background-color: {surface_2};
-}}
-AkToggle::indicator:hover {{
-    border-color: {ink};
-}}
-AkToggle::indicator:checked {{
-    background-color: {ink};
-    border-color: {ink};
-}}
-AkToggle::indicator:disabled {{
-    background-color: {surface};
-    border-color: {border};
-}}
-QFrame#AkToggleSwitch {{
-    background: transparent;
-    border: none;
-}}
-
-/* ---- Alert ---- */
+/* ========== Alert ========== */
 AkAlert {{
     background-color: {surface};
     border: {bw}px solid {border_s};
@@ -669,13 +615,12 @@ QLabel#akAlertText {{
     color: {text_sec};
     background: transparent;
 }}
-AkAlert[variant="solid"] QLabel#akAlertText {{ color: {inv_text}; }}
-
-/* ---- Tabs ---- */
-AkTabs, QFrame#AkTabs {{
-    background: transparent;
-    border: none;
+AkAlert[variant="solid"] QLabel#akAlertText {{
+    color: {inv_text};
 }}
+
+/* ========== Tabs ========== */
+AkTabs, QFrame#AkTabs {{ background: transparent; border: none; }}
 QFrame#akTabList {{
     background: transparent;
     border: none;
@@ -699,20 +644,14 @@ QPushButton#akTab:checked {{
     border-bottom: 2px solid {ink};
     background: transparent;
 }}
-QPushButton#akTab:focus {{
-    color: {ink};
-}}
 
-/* ---- Accordion ---- */
+/* ========== Accordion ========== */
 AkAccordion {{
     background-color: {bg};
     border: {bw}px solid {border};
     border-radius: {r.lg}px;
 }}
-QFrame#akAccordionItem {{
-    background: transparent;
-    border: none;
-}}
+QFrame#akAccordionItem {{ background: transparent; border: none; }}
 QFrame#akAccordionItem[divided="true"] {{
     border-top: {bw}px solid {border};
 }}
@@ -721,14 +660,22 @@ QPushButton#akAccordionTrigger {{
     color: {ink};
     border: none;
     border-radius: 0;
-    padding: {s[4]}px {s[5]}px;
-    font-family: {ty.family_ui};
-    font-size: {fs["sm"]}px;
-    font-weight: 500;
     text-align: left;
+    padding: 0;
 }}
 QPushButton#akAccordionTrigger:hover {{ background-color: {surface}; }}
-QPushButton#akAccordionTrigger:checked {{ background-color: {bg}; }}
+QLabel#akAccordionTitle {{
+    font-size: {fs["sm"]}px;
+    font-weight: 500;
+    color: {ink};
+    background: transparent;
+}}
+QLabel#akAccordionChevron {{
+    font-size: {fs["sm"]}px;
+    color: {text_mut};
+    background: transparent;
+}}
+QLabel#akAccordionChevron[expanded="true"] {{ color: {ink}; }}
 QLabel#akAccordionPanel {{
     color: {text_sec};
     font-size: {fs["sm"]}px;
@@ -736,23 +683,16 @@ QLabel#akAccordionPanel {{
     padding: 0 {s[5]}px {s[5]}px {s[5]}px;
 }}
 
-/* ---- Breadcrumb ---- */
-AkBreadcrumb {{
-    background: transparent;
-    border: none;
-}}
+/* ========== Breadcrumb ========== */
+AkBreadcrumb {{ background: transparent; border: none; }}
 QPushButton#akBreadcrumbLink {{
     background: transparent;
     color: {text_sec};
     border: none;
     padding: 2px 4px;
     font-size: {fs["sm"]}px;
-    text-decoration: none;
 }}
-QPushButton#akBreadcrumbLink:hover {{
-    color: {ink};
-    text-decoration: underline;
-}}
+QPushButton#akBreadcrumbLink:hover {{ color: {ink}; }}
 QLabel#akBreadcrumbSep {{
     color: {text_mut};
     font-size: {fs["sm"]}px;
@@ -765,15 +705,12 @@ QLabel#akBreadcrumbCurrent {{
     background: transparent;
 }}
 
-/* ---- Pagination ---- */
-AkPagination {{
-    background: transparent;
-    border: none;
-}}
+/* ========== Pagination ========== */
+AkPagination {{ background: transparent; border: none; }}
 QPushButton#akPageBtn {{
     background: transparent;
     color: {text_sec};
-    border: {bw}px solid transparent;
+    border: 2px solid transparent;
     border-radius: {r.md}px;
     min-width: 36px;
     min-height: 36px;
@@ -786,9 +723,8 @@ QPushButton#akPageBtn:hover {{
     background-color: {surface};
     color: {text};
 }}
-QPushButton#akPageBtn:checked,
-QPushButton#akPageBtn[current="true"] {{
-    border: {bw}px solid {ink};
+QPushButton#akPageBtn:checked {{
+    border: 2px solid {ink};
     color: {ink};
     background-color: {bg};
 }}
@@ -796,8 +732,9 @@ QPushButton#akPageBtn:disabled {{
     color: {text_mut};
     background: transparent;
 }}
+QPushButton#akPageBtn:focus {{ border: 2px solid {ink}; }}
 
-/* ---- Table ---- */
+/* ========== Table ========== */
 QFrame#AkTableWrap, AkTable {{
     background-color: {bg};
     border: {bw}px solid {border};
@@ -807,10 +744,11 @@ QTableWidget#AkTable, AkTable QTableWidget {{
     background-color: {bg};
     color: {text};
     border: none;
-    border-radius: {r.lg}px;
-    gridline-color: {border};
+    gridline-color: transparent;
     font-size: {fs["sm"]}px;
     outline: none;
+    selection-background-color: {surface};
+    selection-color: {ink};
 }}
 QTableWidget#AkTable::item {{
     padding: {s[4]}px {s[5]}px;
@@ -835,8 +773,12 @@ QHeaderView::section {{
     letter-spacing: {ty.tracking_label};
     text-transform: uppercase;
 }}
+QTableCornerButton::section {{
+    background: {bg};
+    border: none;
+}}
 
-/* ---- Empty state ---- */
+/* ========== Empty ========== */
 AkEmptyState, QFrame#AkEmptyState {{
     background-color: {surface};
     border: {bw}px dashed {border_s};
@@ -862,7 +804,7 @@ QLabel#akEmptyBody {{
     background: transparent;
 }}
 
-/* ---- Modal ---- */
+/* ========== Modal ========== */
 QFrame#akModalCard {{
     background-color: {bg};
     border: {bw}px solid {border_s};
@@ -875,12 +817,21 @@ QLabel#akModalTitle {{
     color: {ink};
     background: transparent;
 }}
-QFrame#akModalBody {{
-    background: transparent;
-    border: none;
+QFrame#akModalBody {{ background: transparent; border: none; }}
+
+/* Pattern block title */
+QLabel#akPatternTitle {{
+    font-family: {ty.family_mono};
+    font-size: {fs["xs"]}px;
+    letter-spacing: {ty.tracking_label};
+    text-transform: uppercase;
+    color: {text_mut};
+    padding-bottom: {s[3]}px;
+    border-bottom: {bw}px solid {border};
+    margin-bottom: {s[2]}px;
 }}
 
-/* ---- Scrollbar ---- */
+/* Scrollbar */
 QScrollBar:vertical, QScrollBar:horizontal {{
     background: {bg};
     border: none;
@@ -900,48 +851,32 @@ QScrollBar::handle:vertical:hover, QScrollBar::handle:horizontal:hover {{
 QScrollBar::add-line, QScrollBar::sub-line {{ height: 0; width: 0; }}
 QScrollBar::add-page, QScrollBar::sub-page {{ background: transparent; }}
 
-QStackedWidget {{
-    background-color: {bg};
-    border: none;
-}}
-
-/* Size grip stays quiet */
-QSizeGrip {{
-    background: transparent;
-    width: 16px;
-    height: 16px;
-}}
+QSizeGrip {{ background: transparent; width: 16px; height: 16px; }}
 """
 
 
 def apply(widget: QWidget) -> None:
-    """Apply generated QSS to *widget* (typically the main window)."""
+    """Apply generated QSS and muted placeholder palette to *widget*."""
+    from PyQt6.QtWidgets import QWidget as _QW
+
     widget.setStyleSheet(build())
     _apply_placeholder_palette(widget)
+    # Custom-painted widgets need a full update after theme change
+    widget.update()
+    for child in widget.findChildren(_QW):
+        child.update()
 
 
 def _apply_placeholder_palette(root: QWidget) -> None:
-    """Set muted placeholder text on line edits / text areas in the tree."""
     try:
         from PyQt6.QtGui import QColor, QPalette
         from PyQt6.QtWidgets import QLineEdit, QPlainTextEdit, QTextEdit
     except Exception:
         return
 
-    muted = QColor(token_safe("text_muted"))
-    for w in root.findChildren(QLineEdit):
-        pal = w.palette()
-        pal.setColor(QPalette.ColorRole.PlaceholderText, muted)
-        w.setPalette(pal)
-    for w in root.findChildren(QPlainTextEdit):
-        pal = w.palette()
-        pal.setColor(QPalette.ColorRole.PlaceholderText, muted)
-        w.setPalette(pal)
-    for w in root.findChildren(QTextEdit):
-        pal = w.palette()
-        pal.setColor(QPalette.ColorRole.PlaceholderText, muted)
-        w.setPalette(pal)
-
-
-def token_safe(key: str) -> str:
-    return get_theme().get(key, "#8a8a8a")
+    muted = QColor(get_theme().get("text_muted", "#8a8a8a"))
+    for cls in (QLineEdit, QPlainTextEdit, QTextEdit):
+        for w in root.findChildren(cls):
+            pal = w.palette()
+            pal.setColor(QPalette.ColorRole.PlaceholderText, muted)
+            w.setPalette(pal)

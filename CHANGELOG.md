@@ -4,29 +4,37 @@ All notable changes to **Akana Qt** are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/); versioning follows
 [SemVer](https://semver.org/). Aligned with web Akana tags where practical.
 
+## [0.5.1] - 2026-07-16
+
+### Added
+- **Custom-painted** `AkToggle` (track + thumb), `AkCheckbox` (ink check), `AkRadio` (ring).
+- **`AkField`** — label + control + helper/error (web `.ak-field`, monochrome errors).
+- **`AkLinkCard`** — gallery index links (web `.ak-link`).
+- **`AkNavStrip`** — horizontal segmented nav (web `.ak-nav`).
+- `akana/icons.py` glyph set, `akana/util.py` repolish helpers.
+- Gallery **Tokens** page: semantic swatches + primitive ramp + type/space reference.
+- Pattern list with badge cells + breadcrumb/pagination (web `patterns.html` fidelity).
+- Modal scrim paint + parent geometry cover; Escape to close.
+
+### Changed
+- Focus rings use **fixed 2px borders** (no padding jump on focus).
+- Accordion: title left / chevron right (not text-mashed).
+- Breadcrumb separators use chevron glyph.
+- Theme apply repaints all custom-painted children.
+- Overview: component catalog with navigable link cards.
+
 ## [0.5.0] - 2026-07-16
 
 ### Added
-- **DESIGN.md**, **AGENTS.md**, **TOKENS.md**, **CHANGELOG.md** (design-system docs parity with web).
-- Theme persistence via `QSettings` (`load_saved_theme` / `set_theme` persist).
-- Semantic `ink_hover` / `ink_active` for primary button affordance without hue.
-- `FS["4xl"]`, `CONTROL_H` (44), field label object name `akFieldLabel`.
-- Overview **cards** row (icon mark + title + body + action) matching web `.ak-card`.
+- **DESIGN.md**, **AGENTS.md**, **TOKENS.md**, **CHANGELOG.md**.
+- Theme persistence via `QSettings`.
+- Semantic `ink_hover` / `ink_active`, `CONTROL_H`, `FS["4xl"]`.
 - Editorial content column capped at `MAX_W` (1080).
-- Placeholder text palette applied on theme refresh.
-- `setup_venv.py` entry for explicit environment bootstrap.
+- `setup_venv.py`.
 
 ### Changed
-- Version **0.3.x → 0.5.0** (web Akana v0.5 component/pattern parity).
-- Page titles: weight 700 / size 3xl (web h1).
-- Lead text: size lg, max ~60ch.
-- Button / input / select / card QSS closer to web `components.css`.
-- Modal body spacing and monochrome shadow balance for light/dark.
-- Gallery meta/version strings use package `__version__`.
-
-### Fixed
-- Primary buttons no longer lacked hover/press feedback in QSS.
-- Input/select heights locked to web 44px control height.
+- Version **0.3.x → 0.5.0** (web component inventory parity).
+- Page title/lead typography closer to web h1 / lead.
 
 ## [0.3.1] - 2026-07-15
 

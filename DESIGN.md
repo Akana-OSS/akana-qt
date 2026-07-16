@@ -1,5 +1,5 @@
 ---
-version: 0.5.0
+version: 0.5.1
 name: Akana Qt
 description: Monochrome, text-first design system for PyQt6 (Ak + Ana). Ink-on-paper, no accent color, bundled IBM Plex TTF (SIL OFL 1.1). Port of web Akana.
 colors:
@@ -121,11 +121,13 @@ One class per file under `akana/components/`, `Ak*` prefix:
 
 | Group | Modules |
 |-------|---------|
-| Core | button, card, input, badge, nav, modal, titlebar |
-| Form | checkbox, radio, select, textarea, toggle |
+| Core | button, card, input, badge, nav/rail/strip, modal, titlebar, link-card |
+| Form | field, checkbox*, radio*, select, textarea, toggle* |
 | Feedback / nav | alert, tabs, accordion, breadcrumb, pagination |
 | Data / content | table, empty-state |
 | Gallery | showcase (panel, style board, section) |
+
+\* Custom-painted indicators (not native QSS-only) for reliable monochrome state.
 
 ## Accessibility
 

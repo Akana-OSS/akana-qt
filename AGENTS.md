@@ -15,9 +15,12 @@ Concretely:
 2. Export from `akana/components/__init__.py`.
 3. Style via **semantic** selectors in `akana/styles.py` — never hardcode
    hex in the component module. Use `akana.tokens.SPACE` / `FS` / `RADIUS`
-   for layout numbers.
-4. Demo the control on the appropriate page in `demo/app.py`.
-5. Update `DESIGN.md` component list + `CHANGELOG.md` (SemVer).
+   for layout numbers. Prefer `akana.theme.get_theme()` inside `paintEvent`
+   when QSS cannot express the control (toggle/checkbox/radio).
+4. Use `akana.util.set_dyn` / `repolish` for dynamic properties.
+5. Prefer fixed **2px** borders for focusable controls so focus never jumps layout.
+6. Demo on the right `demo/app.py` page; wire `AkLinkCard` if it is a gallery entry.
+7. Update `DESIGN.md` + `CHANGELOG.md` (SemVer).
 
 ## Hard constraints
 
