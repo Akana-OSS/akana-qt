@@ -1,4 +1,7 @@
-"""Akana Qt — polished frameless gallery with multi-style showcases."""
+"""Akana Qt — polished frameless gallery with multi-style showcases.
+
+Aligned with web Akana v0.5 gallery + patterns.html composition.
+"""
 
 from __future__ import annotations
 
@@ -19,7 +22,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from akana import fonts, styles, winchrome
+from akana import __version__, fonts, styles, winchrome
 from akana.components import (
     AkAccordion,
     AkAlert,
@@ -42,8 +45,8 @@ from akana.components import (
     AkToggleSwitch,
 )
 from akana.components.akshowcase import AkPanel, AkShowcaseSection, AkStyleBoard
-from akana.theme import current_name, set_theme
-from akana.tokens import SPACE
+from akana.theme import current_name, load_saved_theme, set_theme
+from akana.tokens import MAX_W, SPACE
 
 
 # Edge hit margin for frameless resize (non-Windows fallback)
@@ -90,9 +93,17 @@ class Page(QWidget):
         parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
-        root = QVBoxLayout(self)
+        outer = QVBoxLayout(self)
+        outer.setContentsMargins(0, 0, 0, 0)
+        outer.setSpacing(0)
+
+        # Editorial column — web --maxw
+        inner = QFrame()
+        inner.setObjectName("akContentInner")
+        root = QVBoxLayout(inner)
         root.setContentsMargins(SPACE[8], SPACE[6], SPACE[8], SPACE[10])
         root.setSpacing(SPACE[8])
+        root.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         hero = QFrame()
         hero.setObjectName("akPageHero")
@@ -117,6 +128,17 @@ class Page(QWidget):
         self._body.setSpacing(SPACE[8])
         root.addLayout(self._body)
         root.addStretch(1)
+
+        # Center the max-width column when the window is wide
+        row = QHBoxLayout()
+        row.setContentsMargins(0, 0, 0, 0)
+        row.addStretch(1)
+        row.addWidget(inner, 1)
+        row.addStretch(1)
+        outer.addLayout(row)
+
+        # Soft cap so the column does not sprawl past design max
+        inner.setMaximumWidth(MAX_W + SPACE[8] * 2)
 
     def add(self, widget: QWidget) -> None:
         self._body.addWidget(widget)
@@ -152,12 +174,12 @@ class MainWindow(QMainWindow):
         # ---- Title bar ----
         self.titlebar = AkTitleBar("Akana Qt")
         self.titlebar.set_window(self)
-        self.titlebar.set_meta("v0.3 · monochrome")
+        self.titlebar.set_meta(self._meta_label())
         self.titlebar.minimizeClicked.connect(self.showMinimized)
         self.titlebar.maximizeClicked.connect(self._toggle_max)
         self.titlebar.closeClicked.connect(self.close)
 
-        self.theme_chip = AkButton("Dark", variant="ghost", size="sm")
+        self.theme_chip = AkButton(self._theme_chip_label(), variant="ghost", size="sm")
         self.theme_chip.setFixedHeight(28)
         self.theme_chip.clicked.connect(self._toggle_theme)
         self.titlebar.add_action(self.theme_chip)
@@ -208,7 +230,7 @@ class MainWindow(QMainWindow):
         self.nav.currentChanged.connect(self._on_nav)
         lv.addWidget(self.nav, 1)
 
-        foot = QLabel("IBM Plex · offline\nNo accent · no CDN")
+        foot = QLabel(f"IBM Plex · offline\nNo accent · no CDN\nv{__version__}")
         foot.setObjectName("akMuted")
         foot.setWordWrap(True)
         lv.addWidget(foot)
@@ -248,6 +270,12 @@ class MainWindow(QMainWindow):
         styles.apply(self)
         self.nav.set_current_index(0)
         self._sync_window_chrome()
+
+    def _meta_label(self) -> str:
+        return f"v{__version__} · {current_name()}"
+
+    def _theme_chip_label(self) -> str:
+        return "Light" if current_name() == "dark" else "Dark"
 
     # ---- window chrome ----
 
@@ -289,8 +317,8 @@ class MainWindow(QMainWindow):
     def _toggle_theme(self) -> None:
         name = "dark" if current_name() == "light" else "light"
         set_theme(name)
-        self.theme_chip.setText("Light" if name == "dark" else "Dark")
-        self.titlebar.set_meta(f"v0.3 · {name}")
+        self.theme_chip.setText(self._theme_chip_label())
+        self.titlebar.set_meta(self._meta_label())
         styles.apply(self)
         self._sync_window_chrome()
 
@@ -387,7 +415,7 @@ class MainWindow(QMainWindow):
             "01 · Overview",
             "Clarity without decoration.",
             "Akana is monochrome and text-first. Hierarchy comes from type "
-            "weight, spacing, and border — never hue.",
+            "weight, spacing, and border — never hue. Qt port of web Akana v0.5.",
         )
 
         # Three tone panels
@@ -415,6 +443,30 @@ class MainWindow(QMainWindow):
                 )
             board.add_cell(f"Tone · {tone}", p)
         page.add(board)
+
+        # Web-style cards grid
+        cards_sec = AkShowcaseSection(
+            "Cards",
+            "Icon mark + title + body",
+            "Same composition language as web .ak-card — glyph mark, not illustration.",
+        )
+        cards_row = QHBoxLayout()
+        cards_row.setSpacing(SPACE[4])
+        for glyph, title, body, action in (
+            ("◇", "Tokens", "Primitive gray ramp. Semantic layer for light and dark.", "Open tokens →"),
+            ("▣", "Components", "One file per widget under akana/components/.", "Browse gallery →"),
+            ("☰", "Patterns", "List, form, empty, help — composition over isolation.", "View patterns →"),
+        ):
+            c = AkCard()
+            c.set_icon_mark(glyph)
+            c.set_title(title)
+            c.set_body(body)
+            c.set_action(action)
+            cards_row.addWidget(c, 1)
+        wrap = QWidget()
+        wrap.setLayout(cards_row)
+        cards_sec.add_widget(wrap)
+        page.add(cards_sec)
 
         sec = AkShowcaseSection(
             "Snapshot",
@@ -494,7 +546,7 @@ class MainWindow(QMainWindow):
         inv = AkPanel(tone="ink")
         inv.add_header("On ink", "INVERSE")
         inv.add_widget(
-            QLabel("Ghost and secondary on the strongest surface.")
+            QLabel("Ghost and inverse on the strongest surface.")
         )
         inv.add_row(
             AkButton("Continue", variant="inverse", size="sm"),
@@ -522,8 +574,8 @@ class MainWindow(QMainWindow):
         page = Page(
             "03 · Forms",
             "Quiet fields. Loud focus.",
-            "Inputs use border-strong at rest and ink at focus. Labels stay "
-            "mono uppercase — never colored.",
+            "Inputs use border-strong at rest and ink at focus. Field labels "
+            "are mono uppercase secondary — never colored.",
         )
 
         board = AkStyleBoard(columns=2)
@@ -535,6 +587,10 @@ class MainWindow(QMainWindow):
             _field("Role", AkSelect(["Designer", "Engineer", "Writer"])),
             _field("Notes", AkTextarea("Optional context…")),
         ))
+        help_l = QLabel("Helper text stays muted. Errors use ink border only.")
+        help_l.setObjectName("akHelper")
+        help_l.setWordWrap(True)
+        fields.add_widget(help_l)
         board.add_cell("Standard", fields)
 
         dense = AkPanel(tone="surface")
@@ -616,7 +672,7 @@ class MainWindow(QMainWindow):
         for title, body in (
             ("Overview", "Overview copy sits in secondary text. No tinted panels."),
             ("Specs", "Token tables and API notes would land here."),
-            ("Changelog", "v0.3 · frameless shell · style boards."),
+            ("Changelog", f"v{__version__} · web parity · theme persistence."),
         ):
             lab = QLabel(body)
             lab.setObjectName("akMuted")
@@ -745,7 +801,8 @@ class MainWindow(QMainWindow):
         help_acc = AkAccordion()
         help_acc.add_item(
             "Theme switching",
-            "set_theme('dark'); styles.apply(window) — one shot for the tree.",
+            "set_theme('dark'); styles.apply(window) — one shot for the tree. "
+            "Preference persists via QSettings.",
             expanded=True,
         )
         help_acc.add_item(
@@ -793,7 +850,7 @@ def _field(label: str, widget: QWidget) -> QWidget:
     lay.setContentsMargins(0, 0, 0, 0)
     lay.setSpacing(SPACE[2])
     cap = QLabel(label)
-    cap.setObjectName("akLabel")
+    cap.setObjectName("akFieldLabel")
     lay.addWidget(cap)
     lay.addWidget(widget)
     return wrap
@@ -802,8 +859,11 @@ def _field(label: str, widget: QWidget) -> QWidget:
 def main() -> int:
     app = QApplication(sys.argv)
     app.setApplicationName("Akana Qt")
+    app.setOrganizationName("Akana")
     if fonts.load_fonts():
         app.setFont(QFont("IBM Plex Sans", 10))
+    # Restore last theme before first paint of content styles
+    load_saved_theme()
     window = MainWindow()
     window.show()
     return app.exec()

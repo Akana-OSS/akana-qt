@@ -1,7 +1,8 @@
 """Akana Qt — theme-aware QSS generation.
 
 Styles target widget class names + dynamic properties so a single
-`apply(window)` refresh re-themes the whole tree. Matches web components.css.
+`apply(window)` refresh re-themes the whole tree. Matches web
+`assets/components.css` (Akana v0.5 monochrome).
 """
 
 from __future__ import annotations
@@ -22,8 +23,11 @@ def build() -> str:
     fs = tokens.FS
     s = tokens.SPACE
     bw = tokens.BORDER_W
+    ch = tokens.CONTROL_H
 
     ink = t["ink"]
+    ink_hover = t["ink_hover"]
+    ink_active = t["ink_active"]
     text = t["text"]
     text_sec = t["text_secondary"]
     text_mut = t["text_muted"]
@@ -33,6 +37,7 @@ def build() -> str:
     border = t["border"]
     border_s = t["border_strong"]
     inv_text = t["inverse_text"]
+    inv_bg = t["inverse_bg"]
 
     return f"""
 /* ---- Base ----
@@ -61,13 +66,14 @@ QLabel {{
     color: {text};
 }}
 QLabel#akTitle {{
-    font-size: {fs["2xl"]}px;
-    font-weight: 600;
+    font-size: {fs["3xl"]}px;
+    font-weight: 700;
     letter-spacing: {ty.tracking_tight};
+    line-height: {ty.lh_tight};
     color: {ink};
 }}
 QLabel#akSectionTitle {{
-    font-size: {fs["xl"]}px;
+    font-size: {fs["2xl"]}px;
     font-weight: 500;
     letter-spacing: {ty.tracking_tight};
     color: {ink};
@@ -91,19 +97,31 @@ QLabel#akLabel {{
     text-transform: uppercase;
     color: {text_mut};
 }}
+QLabel#akFieldLabel {{
+    font-family: {ty.family_mono};
+    font-size: {fs["xs"]}px;
+    font-weight: 500;
+    letter-spacing: {ty.tracking_label};
+    text-transform: uppercase;
+    color: {text_sec};
+}}
 QLabel#akMuted {{
     color: {text_sec};
     font-size: {fs["sm"]}px;
 }}
 QLabel#akLead {{
     color: {text_sec};
-    font-size: {fs["md"]}px;
-    max-width: 52ch;
+    font-size: {fs["lg"]}px;
+    max-width: 60ch;
 }}
 QLabel#akPanelTitle {{
     font-size: {fs["sm"]}px;
     font-weight: 500;
     color: {ink};
+}}
+QLabel#akHelper {{
+    font-size: {fs["xs"]}px;
+    color: {text_mut};
 }}
 QFrame#akSidebar {{
     background-color: {surface};
@@ -247,8 +265,13 @@ QFrame#akContentChrome {{
     background-color: {bg};
     border: none;
 }}
+QFrame#akContentInner {{
+    background: transparent;
+    border: none;
+    max-width: {tokens.MAX_W}px;
+}}
 
-/* ---- Button ---- */
+/* ---- Button (web .ak-btn) ---- */
 AkButton {{
     background-color: {ink};
     color: {inv_text};
@@ -258,15 +281,25 @@ AkButton {{
     font-family: {ty.family_ui};
     font-size: {fs["sm"]}px;
     font-weight: 500;
+    min-height: 20px;
 }}
-AkButton:hover {{ background-color: {ink}; color: {inv_text}; }}
-AkButton:pressed {{ background-color: {ink}; color: {inv_text}; }}
+AkButton:hover {{
+    background-color: {ink_hover};
+    color: {inv_text};
+}}
+AkButton:pressed {{
+    background-color: {ink_active};
+    color: {inv_text};
+}}
 AkButton:disabled {{
     background-color: {surface_2};
     color: {text_mut};
     border: {bw}px solid {border};
 }}
-AkButton:focus {{ border: 2px solid {ink}; }}
+AkButton:focus {{
+    border: 2px solid {ink};
+    padding: 9px 15px;
+}}
 AkButton[variant="secondary"] {{
     background-color: transparent;
     color: {text};
@@ -277,10 +310,18 @@ AkButton[variant="secondary"]:hover {{
     color: {text};
     border: {bw}px solid {border_s};
 }}
+AkButton[variant="secondary"]:pressed {{
+    background-color: {surface};
+    color: {ink};
+}}
 AkButton[variant="secondary"]:disabled {{
     background-color: transparent;
     color: {text_mut};
     border: {bw}px solid {border};
+}}
+AkButton[variant="secondary"]:focus {{
+    border: 2px solid {ink};
+    padding: 9px 15px;
 }}
 AkButton[variant="ghost"] {{
     background-color: transparent;
@@ -291,26 +332,40 @@ AkButton[variant="ghost"]:hover {{
     background-color: {surface_2};
     color: {text};
 }}
+AkButton[variant="ghost"]:pressed {{
+    background-color: {surface};
+    color: {ink};
+}}
 AkButton[variant="ghost"]:disabled {{
     background-color: transparent;
     color: {text_mut};
 }}
+AkButton[variant="ghost"]:focus {{
+    border: 2px solid {ink};
+    padding: 9px 15px;
+}}
 /* Inverse: for use on ink / solid surfaces */
 AkButton[variant="inverse"] {{
     background-color: {inv_text};
-    color: {ink};
+    color: {inv_bg};
     border: {bw}px solid transparent;
 }}
 AkButton[variant="inverse"]:hover {{
-    background-color: {inv_text};
-    color: {ink};
+    background-color: {surface};
+    color: {inv_bg};
+}}
+AkButton[variant="inverse"]:pressed {{
+    background-color: {surface_2};
+    color: {inv_bg};
 }}
 AkButton[variant="inverse"]:disabled {{
     background-color: {border_s};
     color: {text_mut};
 }}
 AkButton[akSize="sm"] {{ padding: 7px 12px; font-size: {fs["xs"]}px; }}
+AkButton[akSize="sm"]:focus {{ padding: 6px 11px; }}
 AkButton[akSize="lg"] {{ padding: 13px 22px; font-size: {fs["md"]}px; }}
+AkButton[akSize="lg"]:focus {{ padding: 12px 21px; }}
 
 /* ---- Nav ----
    Always reserve 1px border so checked state doesn't change geometry
@@ -343,12 +398,19 @@ QPushButton#akNavItem:checked:hover {{
     border: {bw}px solid {border};
     color: {ink};
 }}
+QPushButton#akNavItem:focus {{
+    border: 2px solid {ink};
+    padding: 9px 13px;
+}}
 
-/* ---- Card ---- */
+/* ---- Card (web .ak-card) ---- */
 AkCard {{
     background-color: {bg};
     border: {bw}px solid {border};
     border-radius: {r.lg}px;
+}}
+AkCard:hover {{
+    border-color: {border_s};
 }}
 QLabel#akCardTitle {{
     font-size: {fs["lg"]}px;
@@ -362,6 +424,25 @@ QLabel#akCardBody {{
     color: {text_sec};
     background: transparent;
 }}
+QLabel#akCardAction {{
+    font-family: {ty.family_mono};
+    font-size: {fs["xs"]}px;
+    letter-spacing: {ty.tracking_label};
+    text-transform: uppercase;
+    color: {ink};
+    background: transparent;
+}}
+QLabel#akCardIcon {{
+    background-color: {bg};
+    border: {bw}px solid {border};
+    border-radius: {r.md}px;
+    color: {ink};
+    font-size: {fs["sm"]}px;
+    min-width: 38px;
+    max-width: 38px;
+    min-height: 38px;
+    max-height: 38px;
+}}
 
 /* ---- Input / Textarea / Select ---- */
 AkInput, QLineEdit {{
@@ -369,15 +450,19 @@ AkInput, QLineEdit {{
     color: {text};
     border: {bw}px solid {border_s};
     border-radius: {r.md}px;
-    padding: 10px 14px;
+    padding: 0 14px;
+    min-height: {ch}px;
     font-family: {ty.family_ui};
     font-size: {fs["sm"]}px;
     selection-background-color: {ink};
     selection-color: {inv_text};
 }}
+AkInput:hover, QLineEdit:hover {{
+    border-color: {ink};
+}}
 AkInput:focus, QLineEdit:focus {{
     border: 2px solid {ink};
-    padding: 9px 13px;
+    padding: 0 13px;
 }}
 AkInput:disabled, QLineEdit:disabled {{
     color: {text_mut};
@@ -390,26 +475,44 @@ AkTextarea, QPlainTextEdit, QTextEdit {{
     border: {bw}px solid {border_s};
     border-radius: {r.md}px;
     padding: 12px 14px;
+    min-height: 120px;
     font-family: {ty.family_ui};
     font-size: {fs["sm"]}px;
     selection-background-color: {ink};
     selection-color: {inv_text};
 }}
+AkTextarea:hover, QPlainTextEdit:hover, QTextEdit:hover {{
+    border-color: {ink};
+}}
 AkTextarea:focus, QPlainTextEdit:focus, QTextEdit:focus {{
     border: 2px solid {ink};
+    padding: 11px 13px;
+}}
+AkTextarea:disabled, QPlainTextEdit:disabled, QTextEdit:disabled {{
+    color: {text_mut};
+    background-color: {surface_2};
+    border-color: {border};
 }}
 AkSelect, QComboBox {{
     background-color: {bg};
     color: {text};
     border: {bw}px solid {border_s};
     border-radius: {r.md}px;
-    padding: 8px 14px;
+    padding: 0 14px;
     font-family: {ty.family_ui};
     font-size: {fs["sm"]}px;
-    min-height: 28px;
+    min-height: {ch}px;
 }}
 AkSelect:hover, QComboBox:hover {{ border-color: {ink}; }}
-AkSelect:focus, QComboBox:focus {{ border: 2px solid {ink}; }}
+AkSelect:focus, QComboBox:focus {{
+    border: 2px solid {ink};
+    padding: 0 13px;
+}}
+AkSelect:disabled, QComboBox:disabled {{
+    color: {text_mut};
+    background-color: {surface_2};
+    border-color: {border};
+}}
 AkSelect::drop-down, QComboBox::drop-down {{
     border: none;
     width: 28px;
@@ -429,6 +532,7 @@ AkSelect QAbstractItemView, QComboBox QAbstractItemView {{
     selection-background-color: {surface_2};
     selection-color: {ink};
     outline: none;
+    padding: 4px;
 }}
 
 /* ---- Badge ---- */
@@ -465,6 +569,9 @@ AkCheckbox::indicator {{
     border: {bw}px solid {border_s};
     background-color: {bg};
 }}
+AkCheckbox::indicator:hover {{
+    border-color: {ink};
+}}
 AkCheckbox::indicator:checked {{
     background-color: {ink};
     border-color: {ink};
@@ -488,6 +595,9 @@ AkRadio::indicator, QRadioButton::indicator {{
     border: {bw}px solid {border_s};
     background-color: {bg};
 }}
+AkRadio::indicator:hover, QRadioButton::indicator:hover {{
+    border-color: {ink};
+}}
 AkRadio::indicator:checked, QRadioButton::indicator:checked {{
     border: 5px solid {ink};
     background-color: {inv_text};
@@ -506,6 +616,9 @@ AkToggle::indicator {{
     border-radius: 11px;
     border: {bw}px solid {border_s};
     background-color: {surface_2};
+}}
+AkToggle::indicator:hover {{
+    border-color: {ink};
 }}
 AkToggle::indicator:checked {{
     background-color: {ink};
@@ -585,6 +698,9 @@ QPushButton#akTab:checked {{
     color: {ink};
     border-bottom: 2px solid {ink};
     background: transparent;
+}}
+QPushButton#akTab:focus {{
+    color: {ink};
 }}
 
 /* ---- Accordion ---- */
@@ -759,6 +875,10 @@ QLabel#akModalTitle {{
     color: {ink};
     background: transparent;
 }}
+QFrame#akModalBody {{
+    background: transparent;
+    border: none;
+}}
 
 /* ---- Scrollbar ---- */
 QScrollBar:vertical, QScrollBar:horizontal {{
@@ -784,9 +904,44 @@ QStackedWidget {{
     background-color: {bg};
     border: none;
 }}
+
+/* Size grip stays quiet */
+QSizeGrip {{
+    background: transparent;
+    width: 16px;
+    height: 16px;
+}}
 """
 
 
 def apply(widget: QWidget) -> None:
     """Apply generated QSS to *widget* (typically the main window)."""
     widget.setStyleSheet(build())
+    _apply_placeholder_palette(widget)
+
+
+def _apply_placeholder_palette(root: QWidget) -> None:
+    """Set muted placeholder text on line edits / text areas in the tree."""
+    try:
+        from PyQt6.QtGui import QColor, QPalette
+        from PyQt6.QtWidgets import QLineEdit, QPlainTextEdit, QTextEdit
+    except Exception:
+        return
+
+    muted = QColor(token_safe("text_muted"))
+    for w in root.findChildren(QLineEdit):
+        pal = w.palette()
+        pal.setColor(QPalette.ColorRole.PlaceholderText, muted)
+        w.setPalette(pal)
+    for w in root.findChildren(QPlainTextEdit):
+        pal = w.palette()
+        pal.setColor(QPalette.ColorRole.PlaceholderText, muted)
+        w.setPalette(pal)
+    for w in root.findChildren(QTextEdit):
+        pal = w.palette()
+        pal.setColor(QPalette.ColorRole.PlaceholderText, muted)
+        w.setPalette(pal)
+
+
+def token_safe(key: str) -> str:
+    return get_theme().get(key, "#8a8a8a")

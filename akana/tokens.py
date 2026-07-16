@@ -1,6 +1,6 @@
 """Akana Qt — primitive design tokens (theme-agnostic).
 
-Mirrors web Akana `assets/tokens.css` Layer 1.
+Mirrors web Akana `assets/tokens.css` Layer 1 (v0.5).
 Components must never use GRAY_PRIMITIVES directly; use theme semantics.
 """
 
@@ -37,9 +37,9 @@ class TypographyTokens:
     family_display: str = '"IBM Plex Sans", system-ui, sans-serif'
     family_ui: str = '"IBM Plex Sans", system-ui, sans-serif'
     family_mono: str = '"IBM Plex Mono", ui-monospace, monospace'
-    # 2xs, xs, sm, md, lg, xl, 2xl, 3xl  (desktop px)
+    # 2xs, xs, sm, md, lg, xl, 2xl, 3xl, 4xl  (desktop px)
     scale: tuple[int, ...] = field(
-        default_factory=lambda: (11, 12, 14, 16, 18, 22, 28, 36)
+        default_factory=lambda: (11, 12, 14, 16, 18, 22, 28, 36, 48)
     )
     lh_tight: float = 1.12
     lh_snug: float = 1.3
@@ -72,6 +72,8 @@ class RadiusTokens:
 
 @dataclass(frozen=True)
 class MotionTokens:
+    """Web --dur-fast / --dur-base (ms)."""
+
     dur_fast_ms: int = 120
     dur_base_ms: int = 200
 
@@ -81,7 +83,7 @@ SPACING = SpacingTokens()
 RADIUS = RadiusTokens()
 MOTION = MotionTokens()
 
-# Named spacing helpers (px)
+# Named spacing helpers (px) — keys match web --space-N
 SPACE = {
     1: 4,
     2: 8,
@@ -96,7 +98,7 @@ SPACE = {
     20: 80,
 }
 
-# Named type sizes (desktop px)
+# Named type sizes (desktop px) — keys match web --fs-*
 FS = {
     "2xs": 11,
     "xs": 12,
@@ -106,7 +108,9 @@ FS = {
     "xl": 22,
     "2xl": 28,
     "3xl": 36,
+    "4xl": 48,
 }
 
 BORDER_W = 1
 MAX_W = 1080
+CONTROL_H = 44  # web .ak-input / .ak-select height

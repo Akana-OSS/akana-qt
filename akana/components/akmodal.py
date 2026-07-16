@@ -19,6 +19,7 @@ from PyQt6.QtWidgets import (
 )
 
 from akana.components.akbutton import AkButton
+from akana.theme import get_theme
 from akana.tokens import SPACE
 
 
@@ -32,6 +33,7 @@ class AkModal(QDialog):
             Qt.WindowType.Dialog | Qt.WindowType.FramelessWindowHint
         )
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self._card: QFrame | None = None
         self._build_ui(title)
 
     def _build_ui(self, title: str) -> None:
@@ -44,6 +46,7 @@ class AkModal(QDialog):
         card.setObjectName("akModalCard")
         card.setFixedWidth(440)
         card.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Minimum)
+        self._card = card
 
         cv = QVBoxLayout(card)
         cv.setContentsMargins(SPACE[8], SPACE[8], SPACE[8], SPACE[8])
@@ -56,7 +59,7 @@ class AkModal(QDialog):
         self._content = QFrame()
         self._content.setObjectName("akModalBody")
         cl = QVBoxLayout(self._content)
-        cl.setContentsMargins(0, 0, 0, 0)
+        cl.setContentsMargins(0, 0, 0, SPACE[3])
         cl.setSpacing(SPACE[2])
         cv.addWidget(self._content, 1)
 
@@ -75,12 +78,22 @@ class AkModal(QDialog):
         cv.addWidget(actions)
 
         root.addWidget(card)
+        self._apply_shadow()
 
-        shadow = QGraphicsDropShadowEffect(card)
-        shadow.setBlurRadius(20)
-        shadow.setColor(QColor(0, 0, 0, 80))
+    def _apply_shadow(self) -> None:
+        if self._card is None:
+            return
+        # Subtle monochrome elevation (web --shadow-md), no accent tint
+        theme = get_theme()
+        # Parse ink alpha from theme ink for dark/light balance
+        ink = theme.get("ink", "#0a0a0a")
+        is_light_ink = ink.lower() in ("#0a0a0a", "#000000", "black")
+        alpha = 80 if is_light_ink else 140
+        shadow = QGraphicsDropShadowEffect(self._card)
+        shadow.setBlurRadius(24)
+        shadow.setColor(QColor(0, 0, 0, alpha))
         shadow.setOffset(0, 4)
-        card.setGraphicsEffect(shadow)
+        self._card.setGraphicsEffect(shadow)
 
     def set_content(self, widget: QWidget) -> None:
         layout = self._content.layout()
