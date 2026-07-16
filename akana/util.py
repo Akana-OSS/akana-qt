@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from PyQt6.QtCore import QSize, Qt
-from PyQt6.QtGui import QFontMetrics, QResizeEvent
+from PyQt6.QtGui import QFontMetrics, QResizeEvent, QTextDocument, QTextOption
 from PyQt6.QtWidgets import QLabel, QSizePolicy, QWidget
 
 
@@ -85,23 +85,31 @@ class AkFlowLabel(QLabel):
         w = max(1, width)
         if self._max_w is not None:
             w = min(w, self._max_w)
-        # Use bounding rect — more accurate than sizeHint for multi-line
-        fm = QFontMetrics(self.font())
         m = self.contentsMargins()
         inner = max(1, w - m.left() - m.right())
-        flags = int(Qt.TextFlag.TextWordWrap | Qt.AlignmentFlag.AlignLeft)
-        br = fm.boundingRect(0, 0, inner, 10_000, flags, self.text())
-        # +2px slack for antialiasing / descent
-        return br.height() + m.top() + m.bottom() + 2
+        text = self.text() or ""
+        if not text:
+            return QFontMetrics(self.font()).height() + m.top() + m.bottom()
+
+        # QTextDocument matches painted wrap better than QFontMetrics alone
+        doc = QTextDocument()
+        doc.setDefaultFont(self.font())
+        opt = QTextOption()
+        opt.setWrapMode(QTextOption.WrapMode.WordWrap)
+        doc.setDefaultTextOption(opt)
+        doc.setDocumentMargin(0)
+        doc.setPlainText(text)
+        doc.setTextWidth(inner)
+        # +4px slack for descent / stylesheet font delta before polish
+        return int(doc.size().height()) + m.top() + m.bottom() + 4
 
     def sizeHint(self) -> QSize:  # noqa: N802
-        w = self._max_w or super().sizeHint().width()
         if self.width() > 0:
             w = self.width()
         elif self._max_w is not None:
             w = self._max_w
         else:
-            w = max(w, 200)
+            w = max(super().sizeHint().width(), 200)
         return QSize(w, self.heightForWidth(w))
 
     def minimumSizeHint(self) -> QSize:  # noqa: N802
@@ -111,13 +119,22 @@ class AkFlowLabel(QLabel):
     def resizeEvent(self, event: QResizeEvent) -> None:  # noqa: N802
         super().resizeEvent(event)
         # Lock min height to full wrapped measure so layouts cannot clip lines
-        h = self.heightForWidth(self.width())
-        if self.minimumHeight() != h:
+        h = self.heightForWidth(max(self.width(), 1))
+        if abs(self.minimumHeight() - h) > 1:
             self.setMinimumHeight(h)
+            self.updateGeometry()
 
     def setText(self, text: str) -> None:  # noqa: N802
         super().setText(text)
         if self.width() > 0:
             self.setMinimumHeight(self.heightForWidth(self.width()))
-        else:
-            self.updateGeometry()
+        self.updateGeometry()
+
+    def showEvent(self, event) -> None:  # noqa: N802
+        super().showEvent(event)
+        # After QSS font polish, recompute height
+        if self.width() > 0:
+            h = self.heightForWidth(self.width())
+            if abs(self.minimumHeight() - h) > 1:
+                self.setMinimumHeight(h)
+                self.updateGeometry()

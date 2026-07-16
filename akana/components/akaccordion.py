@@ -19,7 +19,7 @@ from PyQt6.QtWidgets import (
 
 from akana.icons import glyph
 from akana.tokens import SPACE
-from akana.util import hand_cursor, set_dyn
+from akana.util import AkFlowLabel, hand_cursor, set_dyn
 
 
 class AkAccordionItem(QFrame):
@@ -72,12 +72,7 @@ class AkAccordionItem(QFrame):
 
         root.addWidget(self._trigger)
 
-        self._panel = QLabel(body)
-        self._panel.setObjectName("akAccordionPanel")
-        self._panel.setWordWrap(True)
-        self._panel.setSizePolicy(
-            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum
-        )
+        self._panel = AkFlowLabel(body, object_name="akAccordionPanel")
         self._panel.setVisible(expanded)
         root.addWidget(self._panel)
 

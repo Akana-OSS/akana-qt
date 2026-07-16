@@ -819,7 +819,9 @@ QTableWidget#AkTable, AkTable QTableWidget {{
     selection-color: {ink};
 }}
 QTableWidget#AkTable::item {{
-    padding: {s[4]}px {s[5]}px;
+    /* Horizontal pad only — vertical QSS padding shrinks cell widgets
+       (badges were clipped to ~19px inside a 52px row). */
+    padding: 0 {s[5]}px;
     border-bottom: {bw}px solid {border};
 }}
 QTableWidget#AkTable::item:selected {{
@@ -834,7 +836,7 @@ QHeaderView::section {{
     color: {text_sec};
     border: none;
     border-bottom: {bw}px solid {border};
-    padding: {s[4]}px {s[5]}px;
+    padding: {s[3]}px {s[5]}px;
     font-family: {ty.family_mono};
     font-size: {fs["2xs"]}px;
     font-weight: 500;

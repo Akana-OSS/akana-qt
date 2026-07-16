@@ -24,6 +24,13 @@ All notable changes to **Akana Qt** are documented here. Format follows
 - **Link-card focus jump:** rest border is `FOCUS_W` (2px), matching focus.
 - **Select height:** max height locked to `CONTROL_H` (parity with input).
 - **Working strip density:** toolbar actions use `md` so they align with inputs.
+- **Lead / empty “dotted” second lines (screenshots):** multi-line labels were
+  height-clipped; added `AkFlowLabel` with real height-for-width and removed
+  QSS padding that ate the last line.
+- **Dark badge contrast:** default pills use `surface_2` + body `text` so status
+  chips stay readable on dark table rows.
+- **Table badge clipping:** `QTableWidget::item` vertical QSS padding shrank cell
+  widgets to ~19px (badges are 28px) — horizontal pad only; badges custom-painted.
 
 ### Changed
 - **Design-system polish** against web Akana v0.5 + skill invariants:

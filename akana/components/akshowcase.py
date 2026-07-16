@@ -60,20 +60,11 @@ class AkShowcaseSection(QFrame):
         head.addWidget(eye)
 
         if title:
-            t = QLabel(title)
-            t.setObjectName("akSectionTitle")
-            t.setWordWrap(True)
-            t.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+            t = AkFlowLabel(title, object_name="akSectionTitle")
             head.addWidget(t)
 
         if lead:
-            l = QLabel(lead)
-            l.setObjectName("akLead")
-            l.setWordWrap(True)
-            l.setMaximumWidth(LEAD_W)
-            # Minimum height-for-width so multi-line leads never overlap siblings
-            l.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum)
-            l.setContentsMargins(0, SPACE[1], 0, SPACE[1])
+            l = AkFlowLabel(lead, object_name="akLead", max_width=LEAD_W)
             head.addWidget(l)
 
         root.addLayout(head)

@@ -1086,9 +1086,14 @@ class MainWindow(QMainWindow):
 
 
 def _badge_cell(text: str, *, solid: bool = False) -> QWidget:
+    """Table cell host for AkBadge — no vertical pad (row height centers it)."""
+    from akana.tokens import BADGE_H
+
     wrap = QWidget()
+    wrap.setMinimumHeight(BADGE_H)
     lay = QHBoxLayout(wrap)
-    lay.setContentsMargins(SPACE[4], SPACE[2], SPACE[4], SPACE[2])
+    # Zero vertical margins so QTableWidget cell widgets are not clipped
+    lay.setContentsMargins(SPACE[4], 0, SPACE[4], 0)
     lay.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
     lay.addWidget(AkBadge(text, variant="solid" if solid else "default"), 0)
     lay.addStretch(1)
